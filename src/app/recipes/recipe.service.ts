@@ -3,9 +3,12 @@ import {Recipe} from "./recipe.model";
 import {IMAGE_LINK} from "../constants";
 import {Ingredient} from "../shared/ingredient.model";
 import {ShoppingListService} from "../shopping-list/shopping-list.service";
+import {Subject} from "rxjs";
 
 @Injectable()
 export class RecipeService {
+
+  recipesChanged = new Subject<Recipe[]>()
   constructor(private service: ShoppingListService) {
   }
   recipes: Recipe[] = [
@@ -32,17 +35,32 @@ export class RecipeService {
       ]),
   ];
 
-  recipeSelector = new EventEmitter<Recipe>();
+  recipeSelector = new Subject<Recipe>();
 
   getRecipes() {
     return this.recipes.slice();
   }
 
-  addRecipeToList(recipe: Recipe) {
-   this.recipes.push(recipe);
+  getRecipe(id: number){
+      return this.recipes[id];
   }
 
   addRecipeToListIngredient(ingredient: Ingredient[]) {
     this.service.onAddIngredients(ingredient)
+  }
+
+  addRecipe(recipe: Recipe){
+    this.recipes.push(recipe);
+    this.recipesChanged.next(this.recipes.slice());
+  }
+
+  updateRecipe(index: number,recipe: Recipe){
+    this.recipes[index] = recipe;
+    this.recipesChanged.next(this.recipes.slice());
+  }
+
+  deleteRecipe(index: number) {
+    this.recipes.splice(index, 1);
+    this.recipesChanged.next(this.recipes.slice());
   }
 }
